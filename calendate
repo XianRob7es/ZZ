@@ -1,0 +1,54 @@
+Calendar = 
+// Only update Variables on top
+VAR LastMonthOfFY = 12 // use to offset month of fiscal year
+VAR FYOffset = 0 // use if Fiscal year starts a year before/after calendar year
+VAR StartOfWeekDay = 2 //1-Sun..Sat, 2-Mon..Sun
+// Do not update below code unless you want additional columns
+VAR MonthOffset =
+    IF ( LastMonthOfFY = 0 || LastMonthOfFY = 12, BLANK (), LastMonthOfFY )
+VAR CalendarTable =
+   CALENDARAUTO ( MonthOffset )
+   //CALENDAR(date(2020,1,1),date(2028,12,31))
+RETURN
+    ADDCOLUMNS (
+        CalendarTable,
+        "Invoice Month",FORMAT ( [Date], "yyyy-MM-01") ,
+        "Year", FORMAT ( [Date], "yyyy" ),
+        "MonthNo", MONTH ( [Date] ),
+        "Month", FORMAT ( [Date], "MMM" ),
+        "Quarter", FORMAT ( [Date], "\QQ" ),
+        "YearQuarter", FORMAT ( [Date], "YYYY-" ) & FORMAT ( [Date], "\QQ" ),
+        "YearMonth", FORMAT ( [Date], "YYYY-MM" ),
+        "WeekdayNo", WEEKDAY ( [Date], StartOfWeekDay ),
+        "Weekday", FORMAT ( [Date], "ddd" ),
+        "WeekNo", WEEKNUM ( [Date], StartOfWeekDay ),
+        "Week", "W" & WEEKNUM ( [Date], StartOfWeekDay ),
+        "QuarterWeekNo",
+            "QW"
+                & WEEKNUM ( [Date], StartOfWeekDay )
+                    - WEEKNUM (
+                        DATE ( YEAR ( [Date] ), (
+                            ROUNDUP ( MONTH ( [Date] ) / 3, 0 ) * 3
+                        ) - 2, StartOfWeekDay )
+                    ) + 1,
+        "FiscalYear",
+            FORMAT ( EDATE ( [Date], - MonthOffset + ( FYOffset * 12 ) ), "\F\YYY" ),
+        "FiscalQuarter",
+            FORMAT ( EDATE ( [Date], - MonthOffset + ( FYOffset * 12 ) ), "\F\QQ" ),
+        "FiscalMonthNo",
+            MONTH ( EDATE ( [Date], - MonthOffset + ( FYOffset * 12 ) ) ),
+        "FiscalMonth",
+            FORMAT ( EDATE ( [Date], - MonthOffset + ( FYOffset * 12 ) ), "\F\MM" ),
+        "FiscalWeekNo",
+            WEEKNUM ( EDATE ( [Date], - MonthOffset + ( FYOffset * 12 ) ), StartOfWeekDay ),
+        "FiscalWeek",
+            "FW"
+                & WEEKNUM ( EDATE ( [Date], - MonthOffset + ( FYOffset * 12 ) ), StartOfWeekDay ),
+        "FiscalQuarterWeekNo",
+            WEEKNUM ( EDATE ( [Date], - MonthOffset + ( FYOffset * 12 ) ), StartOfWeekDay )
+                - WEEKNUM (
+                    DATE ( YEAR ( EDATE ( [Date], - MonthOffset + ( FYOffset * 12 ) ) ), (
+                        ROUNDUP ( MONTH ( EDATE ( [Date], - MonthOffset + ( FYOffset * 12 ) ) ) / 3, 0 ) * 3
+                    ) - 2, StartOfWeekDay )
+                ) + 1
+    )
